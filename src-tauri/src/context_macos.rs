@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
+use tauri_plugin_clipboard_manager::ClipboardExt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Context {
@@ -11,33 +12,53 @@ pub struct Context {
 
 #[tauri::command]
 pub async fn get_context_macos(app: tauri::AppHandle) -> Result<Context, String> {
+    println!("[Rust] get_context_macos called");
+
     // Get clipboard text
     let clipboard = match app.clipboard().read_text() {
-        Ok(text) => text.unwrap_or_default(),
-        Err(_) => String::new(),
+        Ok(text) => {
+            println!("[Rust] Clipboard read success: {} chars", text.len());
+            println!("[Rust] Clipboard preview: {}", &text.chars().take(50).collect::<String>());
+            text
+        }
+        Err(e) => {
+            println!("[Rust] Clipboard read error: {:?}", e);
+            String::new()
+        }
     };
 
     // Get active app name using AppleScript
     let app_name = get_active_app_name().unwrap_or_else(|| "Unknown".to_string());
+    println!("[Rust] Active app: {}", app_name);
 
     // Get browser URL if applicable
     let url = if app_name.contains("Safari") {
-        get_safari_url()
+        let safari_url = get_safari_url();
+        println!("[Rust] Safari URL: {:?}", safari_url);
+        safari_url
     } else if app_name.contains("Chrome") {
-        get_chrome_url()
+        let chrome_url = get_chrome_url();
+        println!("[Rust] Chrome URL: {:?}", chrome_url);
+        chrome_url
     } else {
+        println!("[Rust] Not a browser app");
         None
     };
 
     // Get current timestamp
     let timestamp = chrono::Utc::now().to_rfc3339();
 
-    Ok(Context {
-        clipboard,
-        app_name,
-        url,
-        timestamp,
-    })
+    let context = Context {
+        clipboard: clipboard.clone(),
+        app_name: app_name.clone(),
+        url: url.clone(),
+        timestamp: timestamp.clone(),
+    };
+
+    println!("[Rust] Returning context - clipboard len: {}, app: {}, url: {:?}",
+             clipboard.len(), app_name, url);
+
+    Ok(context)
 }
 
 fn get_active_app_name() -> Option<String> {

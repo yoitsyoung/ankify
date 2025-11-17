@@ -39,9 +39,14 @@ export async function generateCardSuggestions(
 ): Promise<LLMGenerateResponse> {
   const startTime = performance.now();
 
+  console.log('[llm-agent] generateCardSuggestions called');
+  console.log('[llm-agent] API Key present:', !!ANTHROPIC_API_KEY);
+  console.log('[llm-agent] API Key starts with:', ANTHROPIC_API_KEY?.substring(0, 20));
+
   try {
     // Validate input
     if (!request.clipboardText || request.clipboardText.length < 10) {
+      console.log('[llm-agent] Input too short, returning empty');
       return {
         suggestions: [],
         processingTimeMs: 0,
@@ -66,8 +71,9 @@ ${contextStr}
 Return suggestions as JSON only.`;
 
     // Call Anthropic API
+    console.log('[llm-agent] Calling Anthropic API...');
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages: [
@@ -78,6 +84,7 @@ Return suggestions as JSON only.`;
       ],
     });
 
+    console.log('[llm-agent] API response received:', response.content[0].type);
     const endTime = performance.now();
 
     // Parse response
@@ -85,6 +92,8 @@ Return suggestions as JSON only.`;
     if (textContent.type !== 'text') {
       throw new Error('Unexpected response type from Claude');
     }
+
+    console.log('[llm-agent] Raw response text:', textContent.text);
 
     // Extract JSON from response (handle markdown code blocks)
     let jsonText = textContent.text.trim();
@@ -94,7 +103,11 @@ Return suggestions as JSON only.`;
       jsonText = jsonText.replace(/```\n?/, '').replace(/\n?```$/, '');
     }
 
+    console.log('[llm-agent] Cleaned JSON text:', jsonText);
+
     const parsed = JSON.parse(jsonText);
+    console.log('[llm-agent] Parsed object:', parsed);
+    console.log('[llm-agent] Parsed suggestions:', parsed.suggestions?.length, parsed.suggestions);
 
     return {
       suggestions: parsed.suggestions || [],
@@ -102,7 +115,11 @@ Return suggestions as JSON only.`;
       rawText: request.clipboardText,
     };
   } catch (error) {
-    console.error('LLM generation error:', error);
+    console.error('[llm-agent] ERROR:', error);
+    if (error instanceof Error) {
+      console.error('[llm-agent] Error message:', error.message);
+      console.error('[llm-agent] Error stack:', error.stack);
+    }
     const endTime = performance.now();
 
     return {

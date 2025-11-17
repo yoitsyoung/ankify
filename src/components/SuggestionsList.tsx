@@ -16,6 +16,13 @@ export function SuggestionsList({
 }: SuggestionsListProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
+  console.log('[SuggestionsList] Render:', {
+    loading,
+    error,
+    suggestionsCount: suggestions.length,
+    suggestions
+  });
+
   if (loading) {
     return (
       <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">

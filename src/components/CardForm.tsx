@@ -19,6 +19,12 @@ export function CardForm() {
   } | null>(null);
   const [ankiConnected, setAnkiConnected] = useState(false);
 
+  console.log('[CardForm] Rendering with context:', {
+    hasContext: !!context,
+    clipboardLength: context?.clipboard?.length,
+    clipboardPreview: context?.clipboard?.substring(0, 50)
+  });
+
   const { suggestions, loading, error } = useLLMSuggestions(
     context?.clipboard || '',
     context
@@ -26,6 +32,7 @@ export function CardForm() {
 
   // Load context when component mounts
   useEffect(() => {
+    console.log('[CardForm] Component mounted, loading context...');
     loadContext();
     checkAnkiConnection();
   }, []);
@@ -60,10 +67,17 @@ export function CardForm() {
 
   async function loadContext() {
     try {
+      console.log('[CardForm] Calling get_context_macos...');
       const ctx = await invoke<Context>('get_context_macos');
+      console.log('[CardForm] Context loaded:', {
+        clipboard_length: ctx.clipboard?.length,
+        app_name: ctx.app_name,
+        url: ctx.url,
+        clipboard_preview: ctx.clipboard?.substring(0, 50)
+      });
       setContext(ctx);
     } catch (error) {
-      console.error('Failed to load context:', error);
+      console.error('[CardForm] Failed to load context:', error);
     }
   }
 
