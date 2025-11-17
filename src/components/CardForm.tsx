@@ -37,6 +37,44 @@ export function CardForm() {
     checkAnkiConnection();
   }, []);
 
+  // Reload context when window becomes visible/focused
+  useEffect(() => {
+    let lastVisibilityTime = Date.now();
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Window became visible, reload context if it's been more than 100ms since last reload
+        const now = Date.now();
+        if (now - lastVisibilityTime > 100) {
+          console.log('[CardForm] Window became visible, reloading context...');
+          lastVisibilityTime = now;
+          loadContext();
+        }
+      }
+    };
+
+    const handleFocus = () => {
+      // Window gained focus, reload context
+      const now = Date.now();
+      if (now - lastVisibilityTime > 100) {
+        console.log('[CardForm] Window focused, reloading context...');
+        lastVisibilityTime = now;
+        loadContext();
+      }
+    };
+
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Listen for window focus
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
