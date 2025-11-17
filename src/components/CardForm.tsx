@@ -10,7 +10,7 @@ export function CardForm() {
   const [context, setContext] = useState<Context | null>(null);
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
-  const [deckName, setDeckName] = useState('Default');
+  const [deckName, setDeckName] = useState('Ankify Your Life');
   const [errors, setErrors] = useState<{ front?: string; back?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{
