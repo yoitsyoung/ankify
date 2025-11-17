@@ -48,6 +48,15 @@ pub fn run() {
                 .build(),
         )
         .setup(|app| {
+            // Open devtools in debug mode
+            #[cfg(debug_assertions)]
+            {
+                if let Some(window) = app.get_webview_window("main") {
+                    window.open_devtools();
+                    println!("[Rust] DevTools opened");
+                }
+            }
+
             // Register global hotkey: Cmd+Shift+A
             let shortcut = "CmdOrCtrl+Shift+A";
             println!("[Rust] Registering global shortcut: {}", shortcut);

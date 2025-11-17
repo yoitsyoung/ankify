@@ -73,7 +73,7 @@ Return suggestions as JSON only.`;
     // Call Anthropic API
     console.log('[llm-agent] Calling Anthropic API...');
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-haiku-4-5',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages: [
