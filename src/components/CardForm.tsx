@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart';
 import { SuggestionsList } from './SuggestionsList';
 import { ContextDisplay } from './ContextDisplay';
 import { useLLMSuggestions } from '../hooks/useLLMSuggestions';
@@ -18,6 +19,7 @@ export function CardForm() {
     text: string;
   } | null>(null);
   const [ankiConnected, setAnkiConnected] = useState(false);
+  const [autostartEnabled, setAutostartEnabled] = useState(false);
 
   console.log('[CardForm] Rendering with context:', {
     hasContext: !!context,
@@ -35,6 +37,7 @@ export function CardForm() {
     console.log('[CardForm] Component mounted, loading context...');
     loadContext();
     checkAnkiConnection();
+    checkAutostartStatus();
   }, []);
 
   // Reload context when window becomes visible/focused
@@ -122,6 +125,29 @@ export function CardForm() {
   async function checkAnkiConnection() {
     const connected = await checkAnkiConnect();
     setAnkiConnected(connected);
+  }
+
+  async function checkAutostartStatus() {
+    try {
+      const enabled = await isEnabled();
+      setAutostartEnabled(enabled);
+    } catch (error) {
+      console.error('[CardForm] Failed to check autostart status:', error);
+    }
+  }
+
+  async function toggleAutostart() {
+    try {
+      if (autostartEnabled) {
+        await disable();
+        setAutostartEnabled(false);
+      } else {
+        await enable();
+        setAutostartEnabled(true);
+      }
+    } catch (error) {
+      console.error('[CardForm] Failed to toggle autostart:', error);
+    }
   }
 
   const handleUseSuggestion = useCallback((suggestion: CardSuggestion) => {
@@ -305,6 +331,20 @@ export function CardForm() {
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Default"
             />
+          </div>
+
+          {/* Autostart toggle */}
+          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+            <input
+              type="checkbox"
+              id="autostart"
+              checked={autostartEnabled}
+              onChange={toggleAutostart}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            />
+            <label htmlFor="autostart" className="text-sm text-gray-700 cursor-pointer">
+              Launch Ankify automatically at startup
+            </label>
           </div>
 
           {/* Context display */}
